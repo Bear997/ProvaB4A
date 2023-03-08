@@ -17,3 +17,4 @@ ENV MYSQL_ROOT_PASSWORD=${MYSQL_USER:-matteo}
 # RUN cp /etc/mysql/data.sql /docker-entrypoint-initdb.d
 
 EXPOSE 3306
+RUN echo "ciao"
