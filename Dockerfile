@@ -10,5 +10,5 @@ ENV MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:-password}
 ENV MYSQL_PASSWORD=${MYSQL_PASSWORD:-passwordMatteo}
 ENV MYSQL_USER=${MYSQL_USER:-matteo}
 
-EXPOSE 3306/tcp
+# EXPOSE 3306/tcp
 CMD  docker build -t nonloso .
