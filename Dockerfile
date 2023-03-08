@@ -11,9 +11,9 @@ ENV MYSQL_USER=${MYSQL_ROOT_PASSWORD:-password}
 ENV MYSQL_PASSWORD=${MYSQL_PASSWORD:-passwordMatteo}
 ENV MYSQL_ROOT_PASSWORD=${MYSQL_USER:-matteo}
 
-ADD data.sql /etc/mysql/data.sql
+# ADD data.sql /etc/mysql/data.sql
 
-RUN sed -i 's/MYSQL_DATABASE/'$MYSQL_DATABASE'/g' /etc/mysql/data.sql
-RUN cp /etc/mysql/data.sql /docker-entrypoint-initdb.d
+# RUN sed -i 's/MYSQL_DATABASE/'$MYSQL_DATABASE'/g' /etc/mysql/data.sql
+# RUN cp /etc/mysql/data.sql /docker-entrypoint-initdb.d
 
 EXPOSE 3306
