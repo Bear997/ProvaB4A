@@ -15,5 +15,5 @@ ENV MYSQL_ROOT_PASSWORD=$MYSQL_ROOT_PASSWORD
 
 # RUN sed -i 's/MYSQL_DATABASE/'$MYSQL_DATABASE'/g' /etc/mysql/data.sql
 # RUN cp /etc/mysql/data.sql /docker-entrypoint-initdb.d
-EXPOSE 33066666666
+EXPOSE 3306
 RUN echo "ciao"
