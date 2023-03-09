@@ -1,14 +1,30 @@
-# cat docker-compose.yml
-version: '3.3'
+# Use root/example as user/password credentials
+version: '3.1'
+
 services:
-### MySQL Container
-  mysql:
-    build:
-      context: /home/tools/bael/dung/B015
-      args:
-        - MYSQL_DATABASE=${MYSQL_DATABASE}
-        - MYSQL_USER=${MYSQL_USER}
-        - MYSQL_PASSWORD=${MYSQL_PASSWORD}
-        - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+  db:
+    image: mysql
+    # NOTE: use of "mysql_native_password" is not recommended: https://dev.mysql.com/doc/refman/8.0/en/upgrading-from-previous-series.html#upgrade-caching-sha2-password
+    # (this is just an example, not intended to be a production configuration)
+    command: --default-authentication-plugin=mysql_native_password
+    restart: always #se crasha se restarta
+    environment:
+      MYSQL_DATABASE: "${MYSQL_DATABASE}"
+      MYSQL_USER: "${MYSQL_USER}"
+      MYSQL_PASSWORD: "${MYSQL_PASSWORD}"
+      MYSQL_ROOT_PASSWORD: "${MYSQL_ROOT_PASSWORD}"
+      MYSQL_PORT: "${MYSQL_PORT}"
+
+  adminer:
+    image: adminer
+    restart: always
     ports:
-      - "${MYSQL_PORT}:3306"
+      - 8080:8080
+  
+  api: 
+    image: card-api
+    build:
+      context: .
+      # dockerfile: Dockerfile
+    ports:
+    - 3000:3000
