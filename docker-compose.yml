@@ -28,7 +28,7 @@ services:
     container_name: card-api-container
     build:
       context: .
-    # volumes:
-    #   - ./:/app
+    volumes:
+      - ./api:/app
     ports:
       - 3000:3000
