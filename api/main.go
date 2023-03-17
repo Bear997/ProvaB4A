@@ -20,5 +20,5 @@ func main() {
 	r.Run(":3000")
 }
 func response(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{"message": "tascioasa"})
+	c.JSON(http.StatusOK, gin.H{"message": "tascioeteroh"})
 }
