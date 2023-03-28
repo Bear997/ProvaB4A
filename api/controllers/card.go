@@ -24,7 +24,6 @@ type CustomErr struct {
 }
 
 func Card() *CardRepo {
-	fmt.Println("dovrei fare la migrazione")
 	db := db.DbConnection()
 	db.AutoMigrate(&models.Card{})
 	return &CardRepo{Db: db}
@@ -35,20 +34,15 @@ func (repository *CardRepo) CreateCard(c *gin.Context) {
 	var mysqlErr *mysql.MySQLError
 
 	if err := c.ShouldBindJSON(&card); err != nil {
+		if e, ok := err.(*json.UnmarshalTypeError); ok {
 
-		// if reflect.TypeOf(err) == reflect.TypeOf(&json.UnmarshalTypeError{}) {
-		// cazzo := json.UnmarshalFieldError{err}
-		// fmt.Println(cazzo)
-		// }
-		if errors.Is(err, &json.UnmarshalTypeError{}) {
-			fmt.Println("PORCODDDDDIIDIDIUDIDD")
-			fmt.Println(json.UnmarshalFieldError{})
+			c.JSON(http.StatusBadRequest, gin.H{"error": "" + e.Field + "must be a" + kindOfData(e.Field).String()})
+			return
 		}
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-			"error": err.Error(),
-		})
+		c.JSON(http.StatusBadRequest, gin.H{"error": err})
 		return
 	}
+
 	fmt.Println(reflect.TypeOf(card.Title))
 	err := models.CreateCard(repository.Db, &card)
 	if err != nil {
@@ -87,4 +81,14 @@ func (repository *CardRepo) GetCardFromPosition(c *gin.Context) {
 		}
 	}
 	c.JSON(http.StatusOK, card)
+}
+func kindOfData(data interface{}) reflect.Kind {
+
+	value := reflect.ValueOf(data)
+	valueType := value.Kind()
+
+	if valueType == reflect.Ptr {
+		valueType = value.Elem().Kind()
+	}
+	return valueType
 }
