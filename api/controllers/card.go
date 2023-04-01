@@ -4,6 +4,7 @@ import (
 	"Bear997/api/db"
 	"Bear997/api/models"
 	"Bear997/api/utility"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -11,6 +12,7 @@ import (
 	"reflect"
 
 	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
 	"github.com/go-sql-driver/mysql"
 	"gorm.io/gorm"
 )
@@ -33,25 +35,28 @@ func Card() *CardRepo {
 func (repository *CardRepo) CreateCard(c *gin.Context) {
 	var card models.Card
 	var mysqlErr *mysql.MySQLError
+
 	image, errImage := c.FormFile("image")
 	imagePath := "tmp/" + image.Filename
-	jsonData := c.Request.Form
+	c.Request.ParseForm()
+	jsonData := c.Request.FormValue("card")
+	validate := validator.New()
+
+	errjson := json.Unmarshal([]byte(jsonData), &card)
+	if errjson != nil {
+		utility.ValidationStruct(errjson, c)
+	}
+	errval := validate.Struct(card)
+	if errval != nil {
+		utility.ValidationStruct(errval, c)
+	}
 
 	if errImage != nil {
 		fmt.Println("sto nell errore dellimagine")
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "non riesco a prendere l'immagine"})
 		return
 	}
-	// if err := c.Bind(&card); err != nil {
-	// 	utility.ValidationStruct(err, c)
-	// 	return
-	// }
-	card.Title = jsonData.Get("title")
 	card.Image = "https://firebasestorage.googleapis.com/v0/b/tearcard-85619.appspot.com/o/" + url.QueryEscape(imagePath) + "?alt=media"
-	// if err := c.ShouldBindJSON(&card); err != nil {
-	// 	utility.ValidationStruct(err, c)
-	// 	return
-	// }
 
 	errFirebase := utility.UploadImageToFirebaseStorage(image)
 

@@ -3,15 +3,19 @@ package utility
 import (
 	"encoding/json"
 	"fmt"
-	"net/http"
-	"reflect"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
+
+	"net/http"
+	"reflect"
 )
 
 func ValidationStruct(err error, c *gin.Context) {
+
 	if e, ok := err.(*json.UnmarshalTypeError); ok {
+		msg := fmt.Sprintf("" + e.Field + " must be a " + kindOfData(e.Field).String())
+		fmt.Println(msg)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "" + e.Field + " must be a " + kindOfData(e.Field).String()})
 		return
 	} else if errors, ok := err.(validator.ValidationErrors); ok {
@@ -23,6 +27,7 @@ func ValidationStruct(err error, c *gin.Context) {
 			}
 		}
 	}
+	fmt.Println(reflect.TypeOf(err))
 	c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 	return
 }

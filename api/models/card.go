@@ -7,17 +7,17 @@ import (
 )
 
 type Location struct {
-	Latitude  string `json:"latitude" binding:"required"`
-	Longitude string `json:"longitude" binding:"required"`
+	Latitude  string `json:"latitude" binding:"required" validate:"required"`
+	Longitude string `json:"longitude" binding:"required" validate:"required"`
 }
 
 type Card struct {
 	gorm.Model
 	ID       int      `gorm:"primary_key;auto_increment;not_null"`
-	Title    string   `json:"title" binding:"required"`
-	Image    string   `json:"image" binding:"required"`
-	Position Location `json:"position" binding:"required" gorm:"embedded"` //? trovare il modo per fare notnull, devo mettere embedd senno non funziona
-	Verified bool     `json:"verified" binding:"required"`
+	Title    string   `json:"title" binding:"required" validate:"required"`
+	Image    string   `json:"image"`
+	Position Location `json:"position" binding:"required" validate:"required" gorm:"embedded"`
+	Verified bool     `json:"verified" `
 }
 
 func CreateCard(db *gorm.DB, Card *Card) (err error) {
@@ -42,7 +42,6 @@ func GetCardFromPosition(db *gorm.DB, Card *Card, lat string, lon string) (err e
 }
 
 func GetCardFromId(db *gorm.DB, card *Card, id string) (err error) {
-	fmt.Println(id)
 	err = db.First(card, id).Error
 	if err != nil {
 		return err
