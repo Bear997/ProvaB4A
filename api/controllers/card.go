@@ -3,10 +3,11 @@ package controllers
 import (
 	"Bear997/api/db"
 	"Bear997/api/models"
-	"encoding/json"
+	"Bear997/api/utility"
 	"errors"
 	"fmt"
 	"net/http"
+	"net/url"
 	"reflect"
 
 	"github.com/gin-gonic/gin"
@@ -32,21 +33,35 @@ func Card() *CardRepo {
 func (repository *CardRepo) CreateCard(c *gin.Context) {
 	var card models.Card
 	var mysqlErr *mysql.MySQLError
+	image, errImage := c.FormFile("image")
+	imagePath := "tmp/" + image.Filename
+	jsonData := c.Request.Form
 
-	if err := c.ShouldBindJSON(&card); err != nil {
-		if e, ok := err.(*json.UnmarshalTypeError); ok {
+	if errImage != nil {
+		fmt.Println("sto nell errore dellimagine")
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "non riesco a prendere l'immagine"})
+		return
+	}
+	// if err := c.Bind(&card); err != nil {
+	// 	utility.ValidationStruct(err, c)
+	// 	return
+	// }
+	card.Title = jsonData.Get("title")
+	card.Image = "https://firebasestorage.googleapis.com/v0/b/tearcard-85619.appspot.com/o/" + url.QueryEscape(imagePath) + "?alt=media"
+	// if err := c.ShouldBindJSON(&card); err != nil {
+	// 	utility.ValidationStruct(err, c)
+	// 	return
+	// }
 
-			c.JSON(http.StatusBadRequest, gin.H{"error": "" + e.Field + "must be a" + kindOfData(e.Field).String()})
-			return
-		}
-		c.JSON(http.StatusBadRequest, gin.H{"error": err})
+	errFirebase := utility.UploadImageToFirebaseStorage(image)
+
+	if errFirebase != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "errore in firebase"})
 		return
 	}
 
-	fmt.Println(reflect.TypeOf(card.Title))
 	err := models.CreateCard(repository.Db, &card)
 	if err != nil {
-
 		if errors.As(err, &mysqlErr) && mysqlErr.Number == 1364 {
 			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": mysqlErr.Message})
 			return
@@ -66,6 +81,11 @@ func (repository *CardRepo) GetCardFromPosition(c *gin.Context) {
 	var card models.Card
 	var mysqlErr *mysql.MySQLError
 
+	if reflect.TypeOf(lat).String() != "string" || reflect.TypeOf(lat).String() != "string" {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "latitude and longitude must be a string"})
+		return
+	}
+
 	err := models.GetCardFromPosition(repository.Db, &card, lat, lon)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -82,13 +102,18 @@ func (repository *CardRepo) GetCardFromPosition(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, card)
 }
-func kindOfData(data interface{}) reflect.Kind {
 
-	value := reflect.ValueOf(data)
-	valueType := value.Kind()
-
-	if valueType == reflect.Ptr {
-		valueType = value.Elem().Kind()
+func (repository *CardRepo) GetCardFromId(c *gin.Context) {
+	id, _ := c.Params.Get("id")
+	var card models.Card
+	err := models.GetCardFromId(repository.Db, &card, id)
+	fmt.Println(err)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": "Card not found"})
+			return
+		}
 	}
-	return valueType
+	c.JSON(http.StatusOK, card)
+
 }
