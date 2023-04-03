@@ -20,11 +20,6 @@ import (
 type CardRepo struct {
 	Db *gorm.DB
 }
-type CustomErr struct {
-	Status  int    `json:"status"`
-	Field   string `json:"field"`
-	Message string `json:"message"`
-}
 
 func Card() *CardRepo {
 	db := db.DbConnection()
