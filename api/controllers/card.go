@@ -73,6 +73,16 @@ func (repository *CardRepo) CreateCard(c *gin.Context) {
 	c.JSON(http.StatusOK, card)
 }
 
+func (repository *CardRepo) GetAllCard(c *gin.Context) {
+	var cards []models.Card
+	err := models.GetAllCard(repository.Db, &cards)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, cards)
+}
+
 func (repository *CardRepo) GetCardFromPosition(c *gin.Context) {
 
 	queryParams := c.Request.URL.Query()

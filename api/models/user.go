@@ -8,7 +8,7 @@ import (
 
 type User struct {
 	gorm.Model
-	Email    string `json:"email" binding:"required" validate:"email" gorm:"unique"`
+	Email    string `json:"email" binding:"required" validate:"email" binding:"email" gorm:"unique"`
 	Password string `json:"password" binding:"required" validate:"required"`
 	Nome     string `json:"nome" binding:"required" validate:"required"`
 	Cognome  string `json:"cognome" binding:"required" validate:"required"`
@@ -30,7 +30,10 @@ func CreateUser(db *gorm.DB, user *User) (err error) {
 	}
 	return nil
 }
-
+func ChangeProfile(db *gorm.DB, user *User) (err error) {
+	err = db.Model(&user).Updates(user).Error
+	return nil
+}
 func GetUserFromId(db *gorm.DB, user *User, id string) (err error) {
 	err = db.First(user, id).Error
 	if err != nil {

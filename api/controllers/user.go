@@ -30,6 +30,19 @@ func (repository *UserRepo) CreateUser(c *gin.Context) {
 		utility.ValidationStruct(err, c)
 		return
 	}
+
+	err := utility.ValidateEmail(user.Email)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "invalid format for email field"})
+		return
+	}
+
+	if !utility.ValidatePassword(user.Password) {
+		c.AbortWithStatusJSON(http.StatusBadRequest,
+			gin.H{"error": "password must have at least one upper case letter, at least one lower case letter, at least one digit, at least one special character, at least eight characters long."})
+		return
+	}
+
 	hashPsw, err := utility.HashPassword(user.Password)
 	if err != nil {
 		fmt.Println(err.Error())
@@ -42,7 +55,15 @@ func (repository *UserRepo) CreateUser(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, user)
 }
-
+func (repository *UserRepo) ChangeProfile(c *gin.Context) {
+	//TOdo
+	tokenString := c.GetHeader("Authorization")
+	userId := auth.GetIdFromToken(tokenString)
+	err := models.GetUserFromId(repository.Db, &user, userId)
+	if err != nil {
+		fmt.Println("error user in assign")
+	}
+}
 func (repository *UserRepo) GetUserById(c *gin.Context) {
 	var user models.User
 	id, _ := c.Params.Get("id")

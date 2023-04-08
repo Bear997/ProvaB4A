@@ -29,12 +29,17 @@ func CreateCard(db *gorm.DB, Card *Card) (err error) {
 	return nil
 }
 
+func GetAllCard(db *gorm.DB, cards *[]Card) (err error) {
+	err = db.Model(&cards).Find(&cards).Error
+	if err != nil {
+		return err
+	}
+	return nil
+}
 func GetCardFromPosition(db *gorm.DB, Card *Card, lat string, lon string) (err error) {
 
 	const radius = 0.2
 	err = db.Where("6371 * acos(cos(radians(?)) * cos(radians(latitude + 0)) * cos(radians(longitude + 0) - radians(?)) + sin(radians(?)) * sin(radians(latitude + 0))) <= ?", lat, lon, lat, radius).First(Card).Error
-
-	// err = db.Where("latitude = ?", lat).Where("longitude = ?", lon).First(Card).Error
 
 	if err != nil {
 		println(err)
