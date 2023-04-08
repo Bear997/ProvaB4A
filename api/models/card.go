@@ -13,11 +13,10 @@ type Location struct {
 
 type Card struct {
 	gorm.Model
-	ID       int      `gorm:"primary_key;auto_increment;not_null"`
 	Title    string   `json:"title" binding:"required" validate:"required"`
 	Image    string   `json:"image"`
 	Position Location `json:"position" binding:"required" validate:"required" gorm:"embedded"`
-	Verified bool     `json:"verified" `
+	Users    []User   `gorm:"many2many:user_cards;"`
 }
 
 func CreateCard(db *gorm.DB, Card *Card) (err error) {
@@ -44,6 +43,18 @@ func GetCardFromPosition(db *gorm.DB, Card *Card, lat string, lon string) (err e
 func GetCardFromId(db *gorm.DB, card *Card, id string) (err error) {
 	err = db.First(card, id).Error
 	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func AssignCardToUser(db *gorm.DB, association *UserCard) (err error) {
+	fmt.Println("qui ci arrivo sto in model assign")
+
+	err = db.Create(association).Error
+
+	if err != nil {
+		fmt.Println(err)
 		return err
 	}
 	return nil

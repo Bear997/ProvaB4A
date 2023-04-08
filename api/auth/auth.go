@@ -14,10 +14,6 @@ import (
 	"gorm.io/gorm"
 )
 
-type config struct {
-	Key string
-}
-
 func CreateJwt(user models.User) (string, error) {
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
@@ -82,4 +78,23 @@ func ValidateJwt(tokenString string, c *gin.Context, db *gorm.DB) {
 		return
 	}
 
+}
+
+func GetIdFromToken(tokenString string) string {
+	secret := []byte(os.Getenv("JWT_SECRET"))
+	fmt.Println(secret)
+	var keyfunc jwt.Keyfunc = func(token *jwt.Token) (interface{}, error) {
+		return secret, nil
+	}
+	token, err := jwt.Parse(tokenString, keyfunc)
+	if err != nil {
+		fmt.Println("errore nel parsing del token")
+		return ""
+	}
+	claims, ok := token.Claims.(jwt.MapClaims)
+	var id string
+	if ok {
+		id = fmt.Sprintf("%v", claims["id"])
+	}
+	return id
 }

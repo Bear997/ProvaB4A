@@ -19,7 +19,7 @@ type UserRepo struct {
 
 func User() *UserRepo {
 	db := db.DbConnection()
-	db.AutoMigrate(&models.User{})
+	db.AutoMigrate(&models.User{}, &models.Card{}, &models.UserCard{})
 	return &UserRepo{Db: db}
 }
 
@@ -28,6 +28,7 @@ func (repository *UserRepo) CreateUser(c *gin.Context) {
 
 	if err := c.ShouldBindJSON(&user); err != nil {
 		utility.ValidationStruct(err, c)
+		return
 	}
 	hashPsw, err := utility.HashPassword(user.Password)
 	if err != nil {
@@ -35,7 +36,10 @@ func (repository *UserRepo) CreateUser(c *gin.Context) {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "error during hash password"})
 	}
 	user.Password = hashPsw
-	models.CreateUser(repository.Db, &user)
+	err = models.CreateUser(repository.Db, &user)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err})
+	}
 	c.JSON(http.StatusOK, user)
 }
 
@@ -86,4 +90,20 @@ func (repository *UserRepo) Login(c *gin.Context) {
 
 	tokenJwt, err := auth.CreateJwt(user)
 	c.JSON(http.StatusOK, gin.H{"accessToken:": tokenJwt})
+}
+func (repository *UserRepo) GetAllCardsOfUser(c *gin.Context) {
+	//Todo gestione errori
+	tokenString := c.GetHeader("Authorization")
+	var user models.User
+	userId := auth.GetIdFromToken(tokenString)
+	var cards []models.Card
+	err := models.GetUserFromId(repository.Db, &user, userId)
+	if err != nil {
+		fmt.Println("error user in assign")
+	}
+	models.GetAllCardsOfUser(repository.Db, userId, &user, &cards)
+	for _, card := range cards {
+		fmt.Println(card.ID)
+	}
+	c.JSON(http.StatusOK, cards)
 }

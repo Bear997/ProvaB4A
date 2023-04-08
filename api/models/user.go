@@ -8,9 +8,18 @@ import (
 
 type User struct {
 	gorm.Model
-	Email    string `json:"email" binding:"required" validate:"required" gorm:"unique"`
+	Email    string `json:"email" binding:"required" validate:"email" gorm:"unique"`
 	Password string `json:"password" binding:"required" validate:"required"`
-	Role     string `json:"role"  validate:"required"`
+	Nome     string `json:"nome" binding:"required" validate:"required"`
+	Cognome  string `json:"cognome" binding:"required" validate:"required"`
+	Role     string `json:"role" gorm:"default:user"`
+	Cards    []Card `json:"cards" gorm:"many2many:userCards;"`
+}
+
+type UserCard struct {
+	UserID   int  `gorm:"primaryKey"`
+	CardID   int  `gorm:"primaryKey"`
+	Verified bool `json:"verified"`
 }
 
 func CreateUser(db *gorm.DB, user *User) (err error) {
@@ -34,6 +43,17 @@ func Login(db *gorm.DB, user *User, email string) (err error) {
 
 	err = db.Where("email = ?", email).First(&user).Error
 	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func GetAllCardsOfUser(db *gorm.DB, id string, user *User, cards *[]Card) (err error) {
+
+	err = db.Model(&user).Association("Cards").Find(&cards)
+
+	if err != nil {
+		fmt.Println(err)
 		return err
 	}
 	return nil

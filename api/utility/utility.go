@@ -14,6 +14,7 @@ import (
 
 func ValidationStruct(err error, c *gin.Context) {
 	fmt.Println("qua ci arrivo")
+	fmt.Println(err)
 	if e, ok := err.(*json.UnmarshalTypeError); ok {
 		msg := fmt.Sprintf("" + e.Field + " must be a " + kindOfData(e.Field).String())
 		fmt.Println(msg)

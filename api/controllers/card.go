@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"Bear997/api/auth"
 	"Bear997/api/db"
 	"Bear997/api/models"
 	"Bear997/api/utility"
@@ -23,7 +24,6 @@ type CardRepo struct {
 
 func Card() *CardRepo {
 	db := db.DbConnection()
-	db.AutoMigrate(&models.Card{})
 	return &CardRepo{Db: db}
 }
 
@@ -115,5 +115,51 @@ func (repository *CardRepo) GetCardFromId(c *gin.Context) {
 		}
 	}
 	c.JSON(http.StatusOK, card)
+
+}
+
+func (repository *CardRepo) AssignCardToUser(c *gin.Context) {
+	tokenString := c.GetHeader("Authorization")
+	var user models.User
+	var card models.Card
+	var cardsUser []models.Card
+	var mysqlErr *mysql.MySQLError
+
+	cardId, _ := c.Params.Get("cardId")
+
+	userId := auth.GetIdFromToken(tokenString)
+	err := models.GetUserFromId(repository.Db, &user, userId)
+	if err != nil {
+		fmt.Println("error user in assign", err)
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "user not found for assign"})
+		return
+	}
+
+	err = models.GetCardFromId(repository.Db, &card, cardId)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "card not found for assign"})
+			return
+
+		}
+	}
+	association := models.UserCard{Verified: true, UserID: int(user.ID), CardID: int(card.ID)}
+
+	err = models.AssignCardToUser(repository.Db, &association)
+
+	err = models.GetAllCardsOfUser(repository.Db, userId, &user, &cardsUser)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "error nel recupero delle carte dell'utente"})
+	}
+	user.Cards = cardsUser
+	if err != nil {
+		if errors.As(err, &mysqlErr) && mysqlErr.Number == 1062 {
+			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "this card is already assigned to user"})
+			return
+		}
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "unknown error in assign card"})
+		return
+	}
+	c.JSON(http.StatusOK, user)
 
 }
