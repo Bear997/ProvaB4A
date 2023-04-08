@@ -21,9 +21,9 @@ func DefaultRouter(r *gin.Engine) {
 	logged.GET("card/:id", cardRepo.GetCardFromId)
 	logged.GET("card/locate", cardRepo.GetCardFromPosition)
 	logged.GET("/allCards", userRepo.GetAllCardsOfUser)
-	logged.GET("/logout")                                     //TODO to implement
-	logged.PATCH("/updateUser")                               //TODO to implement change profile obviously from jwt token forse (nonloso)
-	logged.POST("/assign/:cardId", cardRepo.AssignCardToUser) //TODO to implements assign a card to a user
+	logged.GET("/logout")       //TODO to implement
+	logged.PATCH("/updateUser") //TODO to implement change profile obviously from jwt token forse (nonloso)
+	logged.POST("/assign/:cardId", cardRepo.AssignCardToUser)
 	//route for admin user
 	admin := logged.Group("/admin", middleware.AdminMiddleware)
 	admin.POST("/createCard", cardRepo.CreateCard)
