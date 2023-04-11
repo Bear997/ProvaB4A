@@ -56,14 +56,22 @@ func (repository *UserRepo) CreateUser(c *gin.Context) {
 	c.JSON(http.StatusOK, user)
 }
 func (repository *UserRepo) ChangeProfile(c *gin.Context) {
-	//TOdo
+
+	var user models.User
 	tokenString := c.GetHeader("Authorization")
 	userId := auth.GetIdFromToken(tokenString)
 	err := models.GetUserFromId(repository.Db, &user, userId)
 	if err != nil {
-		fmt.Println("error user in assign")
+		fmt.Println("error user in changeprofile")
+		return
 	}
+	buf := make([]byte, 1024)
+	num, _ := c.Request.Body.Read(buf)
+	reqBody := string(buf[0:num])
+	err = models.ChangeProfile(repository.Db, &user)
+	c.JSON(http.StatusOK, user)
 }
+
 func (repository *UserRepo) GetUserById(c *gin.Context) {
 	var user models.User
 	id, _ := c.Params.Get("id")
@@ -111,6 +119,18 @@ func (repository *UserRepo) Login(c *gin.Context) {
 
 	tokenJwt, err := auth.CreateJwt(user)
 	c.JSON(http.StatusOK, gin.H{"accessToken:": tokenJwt})
+}
+
+func (repository *UserRepo) GetUserProfile(c *gin.Context) {
+	tokenString := c.GetHeader("Authorization")
+	var user models.User
+	userId := auth.GetIdFromToken(tokenString)
+	err := models.GetUserFromId(repository.Db, &user, userId)
+	if err != nil {
+		fmt.Println("error user in userprofile")
+	}
+
+	c.JSON(http.StatusOK, user)
 }
 func (repository *UserRepo) GetAllCardsOfUser(c *gin.Context) {
 	//Todo gestione errori
