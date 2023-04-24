@@ -10,6 +10,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/go-sql-driver/mysql"
 	"gorm.io/gorm"
 )
 
@@ -25,7 +26,7 @@ func User() *UserRepo {
 
 func (repository *UserRepo) CreateUser(c *gin.Context) {
 	var user models.User
-
+	var mysqlErr *mysql.MySQLError
 	if err := c.ShouldBindJSON(&user); err != nil {
 		utility.ValidationStruct(err, c)
 		return
@@ -51,7 +52,13 @@ func (repository *UserRepo) CreateUser(c *gin.Context) {
 	user.Password = hashPsw
 	err = models.CreateUser(repository.Db, &user)
 	if err != nil {
+
+		if errors.As(err, &mysqlErr) && mysqlErr.Number == 1062 {
+			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "this email is already used"})
+			return
+		}
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err})
+		return
 	}
 	c.JSON(http.StatusOK, user)
 }
@@ -65,9 +72,6 @@ func (repository *UserRepo) ChangeProfile(c *gin.Context) {
 		fmt.Println("error user in changeprofile")
 		return
 	}
-	buf := make([]byte, 1024)
-	num, _ := c.Request.Body.Read(buf)
-	reqBody := string(buf[0:num])
 	err = models.ChangeProfile(repository.Db, &user)
 	c.JSON(http.StatusOK, user)
 }
