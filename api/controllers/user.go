@@ -60,7 +60,9 @@ func (repository *UserRepo) CreateUser(c *gin.Context) {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err})
 		return
 	}
-	c.JSON(http.StatusOK, user)
+	tokenJwt, err := auth.CreateJwt(user)
+	c.JSON(http.StatusOK, gin.H{"accessToken": tokenJwt})
+
 }
 func (repository *UserRepo) ChangeProfile(c *gin.Context) {
 
@@ -122,7 +124,7 @@ func (repository *UserRepo) Login(c *gin.Context) {
 	}
 
 	tokenJwt, err := auth.CreateJwt(user)
-	c.JSON(http.StatusOK, gin.H{"accessToken:": tokenJwt})
+	c.JSON(http.StatusOK, gin.H{"accessToken": tokenJwt})
 }
 
 func (repository *UserRepo) GetUserProfile(c *gin.Context) {
